@@ -4,7 +4,10 @@ use amiquip::{
     QueueDeclareOptions, Result, Publish
 };
 use amiquip::Delivery;
+use std::thread;
+extern crate crossbeam_utils;
 
+use crossbeam_channel::bounded;
 use crossbeam_channel::Sender;
 pub struct QAEventMQ{
     pub amqp : String,
@@ -80,7 +83,7 @@ impl QAEventMQ{
 
 fn main() {
     let code = "rb2001".to_string();
-
+    let (s1, r1) = bounded(0);
     thread::spawn(move || {
         let mut client = QAEventMQ{
             amqp: "amqp://admin:admin@127.0.0.1:5672/".to_string(),
@@ -90,7 +93,7 @@ fn main() {
         };
         println!("xxx");
 //        QAEventMQ::consume(client, s1).unwrap();
-        client.consume();
+        QAEventMQ::consume(client, s1).unwrap();
     });
 
 }
