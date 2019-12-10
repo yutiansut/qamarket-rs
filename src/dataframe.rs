@@ -2,7 +2,7 @@ use std::error::Error;
 use std::ops::Index;
 
 type DataInteger = i32;
-type DataFloat = f32;
+type DataFloat = f64;
 type DataText = String;
 type DataBool = bool;
 
