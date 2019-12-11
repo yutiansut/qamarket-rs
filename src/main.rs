@@ -160,9 +160,7 @@ impl QAKlineBase{
     }
 
     fn update(&mut self, data:Value) {
-        let p1 = "datetime";
-        let p2 = "last_price";
-        let p3 = "volume";
+
         if self.open == 0.0{
             self.init_data(data.clone());
         }
