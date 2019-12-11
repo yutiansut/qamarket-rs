@@ -17,6 +17,7 @@ use crate::dataframe::DataCell;
 use serde_json::json;
 use serde::{Deserialize, Serialize};
 
+
 pub struct QAEventMQ{
     pub amqp : String,
     pub exchange: String,
@@ -103,7 +104,12 @@ pub struct QAKlineBase{
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QASeries{
-    pub tick: Vec<QAKlineBase>,
+    //pub tick: Vec<QAKlineBase>,
+    pub min1: Vec<QAKlineBase>,
+    pub min5: Vec<QAKlineBase>,
+    pub min15: Vec<QAKlineBase>,
+    pub min30: Vec<QAKlineBase>,
+    pub min60: Vec<QAKlineBase>,
     dtmin: String //dtmin是用于控制分钟线生成的
 }
 
@@ -154,15 +160,12 @@ impl QAKlineBase{
     }
 
     fn update(&mut self, data:Value) {
-
         let p1 = "datetime";
         let p2 = "last_price";
         let p3 = "volume";
-
         if self.open == 0.0{
             self.init_data(data.clone());
         }
-
         let new_price = data["last_price"].as_f64().unwrap();
         if (self.high < new_price){
             self.high = new_price;
@@ -173,12 +176,9 @@ impl QAKlineBase{
         self.close = new_price;
         let cur_datetime:String = data["datetime"].as_str().unwrap().parse().unwrap();
         self.updatetime = cur_datetime.clone();
-
     }
 
     fn init_data(&mut self, data:Value) {
-
-
         self.datetime= data["datetime"].as_str().unwrap().parse().unwrap();
         self.updatetime=data["datetime"].as_str().unwrap().parse().unwrap();
         self.code=data["symbol"].as_str().unwrap().parse().unwrap();
@@ -220,7 +220,12 @@ impl QAKlineBase{
 impl QASeries{
     fn init() -> QASeries {
         QASeries{
-            tick:vec![],
+//            tick:vec![],
+            min1: vec![],
+            min5: vec![],
+            min15: vec![],
+            min30: vec![],
+            min60: vec![],
             dtmin: "99".to_string(),
         }
     }
@@ -228,27 +233,130 @@ impl QASeries{
         let cur_data = data.clone();
         let cur_datetime:String = cur_data["datetime"].as_str().unwrap().parse().unwrap();
         if &cur_datetime[14..16] != self.dtmin{
-            if cur_datetime.len() == 19 {
-                println!("create new bar !!");
-                let lastdata = QAKlineBase::init().new(data.clone());
-                self.tick.push(lastdata);
-            }else{
-                let mut lastdata:QAKlineBase = self.tick.pop().unwrap();
-                lastdata.update(data.clone());
-                self.tick.push(lastdata);
+
+            let min_f = &cur_datetime[14..16];
+            match  min_f{
+                "00" => {
+                    self.update_1(cur_data.clone(), cur_datetime.clone());
+                    self.update_5(cur_data.clone(), cur_datetime.clone());
+                    self.update_15(cur_data.clone(), cur_datetime.clone());
+                    self.update_30(cur_data.clone(), cur_datetime.clone());
+                    self.update_60(cur_data.clone(), cur_datetime.clone());
+                }
+                "30" => {
+                    self.update_1(cur_data.clone(), cur_datetime.clone());
+                    self.update_5(cur_data.clone(), cur_datetime.clone());
+                    self.update_15(cur_data.clone(), cur_datetime.clone());
+                    self.update_30(cur_data.clone(), cur_datetime.clone());
+
+                }
+                "15" | "45" => {
+                    self.update_1(cur_data.clone(), cur_datetime.clone());
+                    self.update_5(cur_data.clone(), cur_datetime.clone());
+                    self.update_15(cur_data.clone(), cur_datetime.clone());
+
+                }
+                "05" | "10" | "20" | "25" | "35" | "40" | "50" | "55" => {
+                    self.update_1(cur_data.clone(), cur_datetime.clone());
+                    self.update_5(cur_data.clone(), cur_datetime.clone());
+
+                }
+                _ => {
+                    self.update_1(cur_data.clone(), cur_datetime.clone());
+                }
             }
+
         } else{
-            let mut lastdata:QAKlineBase = self.tick.pop().unwrap();
+            let mut lastdata:QAKlineBase = self.min1.pop().unwrap();
             lastdata.update(data.clone());
-            self.tick.push(lastdata);
+            self.min1.push(lastdata);
+            let mut lastdata:QAKlineBase = self.min5.pop().unwrap();
+            lastdata.update(data.clone());
+            self.min5.push(lastdata);
+            let mut lastdata:QAKlineBase = self.min15.pop().unwrap();
+            lastdata.update(data.clone());
+            self.min15.push(lastdata);
+            let mut lastdata:QAKlineBase = self.min30.pop().unwrap();
+            lastdata.update(data.clone());
+            self.min30.push(lastdata);
+            let mut lastdata:QAKlineBase = self.min60.pop().unwrap();
+            lastdata.update(data.clone());
+            self.min60.push(lastdata);
         }
         self.dtmin = cur_datetime[14..16].parse().unwrap();
         println!("dtmin {:?}", self.dtmin);
 
 
     }
+
+    fn update_1(&mut self, data:Value, cur_datetime:String){
+
+        if cur_datetime.len() == 19 {
+            println!("create new bar !!");
+            let lastdata = QAKlineBase::init().new(data.clone());
+            self.min1.push(lastdata);
+        }else{
+            let mut lastdata:QAKlineBase = self.min1.pop().unwrap();
+            lastdata.update(data.clone());
+            self.min1.push(lastdata);
+        }
+    }
+
+
+    fn update_5(&mut self, data:Value, cur_datetime:String){
+
+        if cur_datetime.len() == 19 {
+            println!("create new bar !!");
+            let lastdata = QAKlineBase::init().new(data.clone());
+            self.min5.push(lastdata);
+        }else{
+            let mut lastdata:QAKlineBase = self.min5.pop().unwrap();
+            lastdata.update(data.clone());
+            self.min5.push(lastdata);
+        }
+    }
+    fn update_15(&mut self, data:Value, cur_datetime:String){
+
+        if cur_datetime.len() == 19 {
+            println!("create new bar !!");
+            let lastdata = QAKlineBase::init().new(data.clone());
+            self.min15.push(lastdata);
+        }else{
+            let mut lastdata:QAKlineBase = self.min5.pop().unwrap();
+            lastdata.update(data.clone());
+            self.min15.push(lastdata);
+        }
+    }
+    fn update_30(&mut self, data:Value, cur_datetime:String){
+
+        if cur_datetime.len() == 19 {
+            println!("create new bar !!");
+            let lastdata = QAKlineBase::init().new(data.clone());
+            self.min30.push(lastdata);
+        }else{
+            let mut lastdata:QAKlineBase = self.min30.pop().unwrap();
+            lastdata.update(data.clone());
+            self.min30.push(lastdata);
+        }
+    }
+    fn update_60(&mut self, data:Value, cur_datetime:String){
+
+        if cur_datetime.len() == 19 {
+            println!("create new bar !!");
+            let lastdata = QAKlineBase::init().new(data.clone());
+            self.min60.push(lastdata);
+        }else{
+            let mut lastdata:QAKlineBase = self.min60.pop().unwrap();
+            lastdata.update(data.clone());
+            self.min60.push(lastdata);
+        }
+    }
     fn print(&mut self){
-        print!("\n\r{:?}\n\r", self.tick);
+        print!("MIN1 \n\r{:?}\n\r", self.min1);
+        print!("MIN5 \n\r{:?}\n\r", self.min5);
+        print!("MIN15 \n\r{:?}\n\r", self.min15);
+        print!("MIN30 \n\r{:?}\n\r", self.min30);
+        print!("MIN60 \n\r{:?}\n\r", self.min60);
     }
     fn to_json(&mut self){
         let jdata= serde_json::to_string(&self).unwrap();
