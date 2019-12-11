@@ -114,10 +114,28 @@ pub struct QASeries{
 }
 
 fn main() {
-    let code = "au2002".to_string();
+    // let code = "au2002".to_string();
+    let subscribe_list =  vec![ "au2006", "a2005", "ag2002", "al2002", "b2002",
+    "bb1912", "bu2006", "c2005", "cu2002", "cs2001","eg2005", "fb2005", "fu2005", "hc2001",
+    "j2005", "i2005", "jd2005", "jm2001", "l2005", "m2005", "ni2002", "p2005", "pb2001",
+    "pp2005", "rb2005", "ru2005", "sc2002", "sn2005", "sp2005", "v2005", "y2005"];
+    let sub_iter= subscribe_list.iter().cloned();
+    for code in sub_iter{
+        thread::spawn(move|| {
+            subscribe_code(code.parse().unwrap());
+        });
+    }
+    loop{
+
+    }
+
+}
+
+fn subscribe_code(code:String){
     let (s1, r1) = bounded(0);
+
     thread::spawn(move || {
-        let mut client = QAEventMQ{
+        let mut client = QAEventMQ {
             amqp: "amqp://admin:admin@127.0.0.1:5672/".to_string(),
             exchange: "CTPX".to_string(),
             model: "direct".to_string(),
@@ -128,22 +146,20 @@ fn main() {
     });
 
     let mut index: Vec<String> = vec![];
-    let mut values:  Vec<f64> = vec![];
+    let mut values: Vec<f64> = vec![];
 
 
     let mut kline = QASeries::init();
 
-    loop{
+    loop {
         let data = r1.recv().unwrap();
-        let resx:Value = serde_json::from_str(&data).unwrap();
+        let resx: Value = serde_json::from_str(&data).unwrap();
 
         kline.update(resx);
         kline.print();
         kline.to_json();
     }
 }
-
-
 
 impl QAKlineBase{
     fn init() -> QAKlineBase {
@@ -198,7 +214,7 @@ impl QAKlineBase{
         let data = QAKlineBase{
             datetime: data["datetime"].as_str().unwrap().parse().unwrap(),
             updatetime:data["datetime"].as_str().unwrap().parse().unwrap(),
-            code: data["datetime"].as_str().unwrap().parse().unwrap(),
+            code: data["symbol"].as_str().unwrap().parse().unwrap(),
             open:  data["last_price"].as_f64().unwrap(),
             high: data["last_price"].as_f64().unwrap(),
             low: data["last_price"].as_f64().unwrap(),
@@ -230,6 +246,14 @@ impl QASeries{
     fn update(&mut self, data:Value) {
         let cur_data = data.clone();
         let cur_datetime:String = cur_data["datetime"].as_str().unwrap().parse().unwrap();
+        if self.dtmin == "99".to_string(){
+            self.update_1(cur_data.clone(), cur_datetime.clone());
+            self.update_5(cur_data.clone(), cur_datetime.clone());
+            self.update_15(cur_data.clone(), cur_datetime.clone());
+            self.update_30(cur_data.clone(), cur_datetime.clone());
+            self.update_60(cur_data.clone(), cur_datetime.clone());
+            self.dtmin = cur_datetime[14..16].parse().unwrap();
+        }
         if &cur_datetime[14..16] != self.dtmin{
 
             let min_f = &cur_datetime[14..16];
@@ -320,7 +344,7 @@ impl QASeries{
             let lastdata = QAKlineBase::init().new(data.clone());
             self.min15.push(lastdata);
         }else{
-            let mut lastdata:QAKlineBase = self.min5.pop().unwrap();
+            let mut lastdata:QAKlineBase = self.min15.pop().unwrap();
             lastdata.update(data.clone());
             self.min15.push(lastdata);
         }
