@@ -1,14 +1,11 @@
 
-use amiquip::{
-    Connection, ConsumerMessage, ConsumerOptions, ExchangeDeclareOptions, ExchangeType, FieldTable,
-    QueueDeclareOptions, Result, Publish
-};
+use amiquip::{Connection, ConsumerMessage, ConsumerOptions, ExchangeDeclareOptions, ExchangeType, FieldTable, QueueDeclareOptions, Result, Publish, Exchange};
 use amiquip::Delivery;
 use std::thread;
 extern crate crossbeam_utils;
 
 use crossbeam_channel::bounded;
-use crossbeam_channel::Sender;
+use crossbeam_channel::{Sender, Receiver};
 use serde_json::value::Value;
 extern crate ndarray;
 use ndarray::{array};
@@ -18,11 +15,13 @@ use serde_json::json;
 use serde::{Deserialize, Serialize};
 
 
+
 pub struct QAEventMQ{
     pub amqp : String,
     pub exchange: String,
     pub model: String,
-    pub routing_key: String
+    pub routing_key: String,
+    // connection: 
 }
 
 
@@ -72,7 +71,42 @@ impl QAEventMQ{
         connection.close()
     }
 
+    pub fn publish_fanout(
+        amqp: String,
+        exchange_name: String,
+        context: String,
+        routing_key: String
+    ) {
 
+        let mut connection = Connection::insecure_open(&amqp).unwrap();
+        let channel = connection.open_channel(None).unwrap();
+        let exchange = channel.exchange_declare(
+            ExchangeType::Fanout,
+            &exchange_name,
+            ExchangeDeclareOptions::default(),
+        ).unwrap();
+
+        exchange.publish(Publish::new(context.as_bytes(), routing_key.as_str())).unwrap();
+        //connection.close();
+    }
+    pub fn publish_direct(
+        amqp: String,
+        exchange_name: String,
+        context: String,
+        routing_key: String
+    ) {
+
+        let mut connection = Connection::insecure_open(&amqp).unwrap();
+        let channel = connection.open_channel(None).unwrap();
+        let exchange = channel.exchange_declare(
+            ExchangeType::Direct,
+            &exchange_name,
+            ExchangeDeclareOptions::default(),
+        ).unwrap();
+
+        exchange.publish(Publish::new(context.as_bytes(), routing_key.as_str())).unwrap();
+        //connection.close();
+    }
     pub fn callback(eventmq: &QAEventMQ,
                     message: &Delivery,
                     ws_event_tx:  &Sender<String>
@@ -133,32 +167,41 @@ fn main() {
 
 fn subscribe_code(code:String){
     let (s1, r1) = bounded(0);
-
+    let route_key = code.clone();
     thread::spawn(move || {
         let mut client = QAEventMQ {
-            amqp: "amqp://admin:admin@127.0.0.1:5672/".to_string(),
+            amqp: "amqp://admin:admin@192.168.2.24:5672/".to_string(),
             exchange: "CTPX".to_string(),
             model: "direct".to_string(),
-            routing_key: code,
+            routing_key: route_key,
         };
         println!("xxx");
         QAEventMQ::consume(client, s1).unwrap();
     });
 
-    let mut index: Vec<String> = vec![];
-    let mut values: Vec<f64> = vec![];
 
 
     let mut kline = QASeries::init();
+
+
+    let mut connection = Connection::insecure_open("amqp://admin:admin@192.168.2.24:5672/").unwrap();
+    let channel = connection.open_channel(None).unwrap();
+    let exchange = channel.exchange_declare(
+        ExchangeType::Fanout,
+        format!("realtime_{}", code.clone()).as_str(),
+        ExchangeDeclareOptions::default(),
+    ).unwrap();
 
     loop {
         let data = r1.recv().unwrap();
         let resx: Value = serde_json::from_str(&data).unwrap();
 
         kline.update(resx);
-        kline.print();
-        kline.to_json();
+        //kline.print();
+        let js = kline.to_json();
+        exchange.publish(Publish::new(js.as_bytes(), code.as_str())).unwrap();
     }
+    connection.close();
 }
 
 impl QAKlineBase{
@@ -223,10 +266,10 @@ impl QAKlineBase{
         };
         data
     }
-    fn to_json(&mut self) {
+    fn to_json(&mut self) -> String{
         let jdata= serde_json::to_string(&self).unwrap();
-        println!("this is json{:#?}", jdata);
-
+        //println!("this is json{:#?}", jdata);
+        jdata
     }
 
 }
@@ -315,6 +358,7 @@ impl QASeries{
 
         if cur_datetime.len() == 19 {
             println!("create new bar !!");
+            //self.min1.pop().unwrap();
             let lastdata = QAKlineBase::init().new(data.clone());
             self.min1.push(lastdata);
         }else{
@@ -329,6 +373,7 @@ impl QASeries{
 
         if cur_datetime.len() == 19 {
             println!("create new bar !!");
+            //self.min5.pop().unwrap();
             let lastdata = QAKlineBase::init().new(data.clone());
             self.min5.push(lastdata);
         }else{
@@ -341,6 +386,7 @@ impl QASeries{
 
         if cur_datetime.len() == 19 {
             println!("create new bar !!");
+            //self.min15.pop().unwrap();
             let lastdata = QAKlineBase::init().new(data.clone());
             self.min15.push(lastdata);
         }else{
@@ -353,6 +399,7 @@ impl QASeries{
 
         if cur_datetime.len() == 19 {
             println!("create new bar !!");
+            //self.min30.pop().unwrap();
             let lastdata = QAKlineBase::init().new(data.clone());
             self.min30.push(lastdata);
         }else{
@@ -365,6 +412,7 @@ impl QASeries{
 
         if cur_datetime.len() == 19 {
             println!("create new bar !!");
+            //self.min60.pop().unwrap();
             let lastdata = QAKlineBase::init().new(data.clone());
             self.min60.push(lastdata);
         }else{
@@ -380,8 +428,9 @@ impl QASeries{
         print!("MIN30 \n\r{:?}\n\r", self.min30);
         print!("MIN60 \n\r{:?}\n\r", self.min60);
     }
-    fn to_json(&mut self){
+    fn to_json(&mut self) -> String{
         let jdata= serde_json::to_string(&self).unwrap();
-        println!("\nthis is json{:#?}\n", jdata);
+        //println!("\nthis is json{:#?}\n", jdata);
+        jdata
     }
 }
