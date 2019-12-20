@@ -170,7 +170,7 @@ fn subscribe_code(code:String){
     let route_key = code.clone();
     thread::spawn(move || {
         let mut client = QAEventMQ {
-            amqp: "amqp://admin:admin@127.0.0.1:5672/".to_string(),
+            amqp: "amqp://admin:admin@qaeventmq:5672/".to_string(),
             exchange: "CTPX".to_string(),
             model: "direct".to_string(),
             routing_key: route_key,
@@ -184,7 +184,7 @@ fn subscribe_code(code:String){
     let mut kline = QASeries::init();
 
 
-    let mut connection = Connection::insecure_open("amqp://admin:admin@127.0.0.1:5672/").unwrap();
+    let mut connection = Connection::insecure_open("amqp://admin:admin@qaeventmq:5672/").unwrap();
     let channel = connection.open_channel(None).unwrap();
     let exchange = channel.exchange_declare(
         ExchangeType::Direct,
