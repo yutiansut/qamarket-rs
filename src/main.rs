@@ -439,28 +439,38 @@ impl QASeries{
         jdata
     }
     fn to_1min_json(&mut self) -> String{
-        let jdata= serde_json::to_string(&self.min1).unwrap();
+        let mut lastdata:QAKlineBase = self.min1.pop().unwrap();
+        let jdata= serde_json::to_string(&lastdata).unwrap();
+        self.min1.push(lastdata);
+
         //println!("\nthis is json{:#?}\n", jdata);
         jdata
     }
     fn to_5min_json(&mut self) -> String{
-        let jdata= serde_json::to_string(&self.min5).unwrap();
-        //println!("\nthis is json{:#?}\n", jdata);
+        let mut lastdata:QAKlineBase = self.min5.pop().unwrap();
+        let jdata= serde_json::to_string(&lastdata).unwrap();
+        self.min5.push(lastdata);
+
         jdata
     }
     fn to_15min_json(&mut self) -> String{
-        let jdata= serde_json::to_string(&self.min15).unwrap();
-        //println!("\nthis is json{:#?}\n", jdata);
+        let mut lastdata:QAKlineBase = self.min15.pop().unwrap();
+        let jdata= serde_json::to_string(&lastdata).unwrap();
+        self.min15.push(lastdata);
         jdata
     }
     fn to_30min_json(&mut self) -> String{
-        let jdata= serde_json::to_string(&self.min30).unwrap();
-        //println!("\nthis is json{:#?}\n", jdata);
+        let mut lastdata:QAKlineBase = self.min30.pop().unwrap();
+        let jdata= serde_json::to_string(&lastdata).unwrap();
+        self.min30.push(lastdata);
+
         jdata
     }
     fn to_60min_json(&mut self) -> String{
-        let jdata= serde_json::to_string(&self.min60).unwrap();
-        //println!("\nthis is json{:#?}\n", jdata);
+        let mut lastdata:QAKlineBase = self.min60.pop().unwrap();
+        let jdata= serde_json::to_string(&lastdata).unwrap();
+        self.min60.push(lastdata);
+
         jdata
     }
 }
