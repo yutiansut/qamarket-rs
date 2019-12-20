@@ -170,7 +170,7 @@ fn subscribe_code(code:String){
     let route_key = code.clone();
     thread::spawn(move || {
         let mut client = QAEventMQ {
-            amqp: "amqp://admin:admin@192.168.2.24:5672/".to_string(),
+            amqp: "amqp://admin:admin@127.0.0.1:5672/".to_string(),
             exchange: "CTPX".to_string(),
             model: "direct".to_string(),
             routing_key: route_key,
@@ -184,10 +184,10 @@ fn subscribe_code(code:String){
     let mut kline = QASeries::init();
 
 
-    let mut connection = Connection::insecure_open("amqp://admin:admin@192.168.2.24:5672/").unwrap();
+    let mut connection = Connection::insecure_open("amqp://admin:admin@127.0.0.1:5672/").unwrap();
     let channel = connection.open_channel(None).unwrap();
     let exchange = channel.exchange_declare(
-        ExchangeType::Fanout,
+        ExchangeType::Direct,
         format!("realtime_{}", code.clone()).as_str(),
         ExchangeDeclareOptions::default(),
     ).unwrap();
@@ -198,8 +198,13 @@ fn subscribe_code(code:String){
 
         kline.update(resx);
         //kline.print();
-        let js = kline.to_json();
-        exchange.publish(Publish::new(js.as_bytes(), code.as_str())).unwrap();
+//        let js = kline.to_json();
+
+        exchange.publish(Publish::new(kline.to_1min_json().as_bytes(), "1min")).unwrap();
+        exchange.publish(Publish::new(kline.to_5min_json().as_bytes(), "5min")).unwrap();
+        exchange.publish(Publish::new(kline.to_15min_json().as_bytes(), "15min")).unwrap();
+        exchange.publish(Publish::new(kline.to_30min_json().as_bytes(), "30min")).unwrap();
+        exchange.publish(Publish::new(kline.to_60min_json().as_bytes(), "60min")).unwrap();
     }
     connection.close();
 }
@@ -430,6 +435,31 @@ impl QASeries{
     }
     fn to_json(&mut self) -> String{
         let jdata= serde_json::to_string(&self).unwrap();
+        //println!("\nthis is json{:#?}\n", jdata);
+        jdata
+    }
+    fn to_1min_json(&mut self) -> String{
+        let jdata= serde_json::to_string(&self.min1).unwrap();
+        //println!("\nthis is json{:#?}\n", jdata);
+        jdata
+    }
+    fn to_5min_json(&mut self) -> String{
+        let jdata= serde_json::to_string(&self.min5).unwrap();
+        //println!("\nthis is json{:#?}\n", jdata);
+        jdata
+    }
+    fn to_15min_json(&mut self) -> String{
+        let jdata= serde_json::to_string(&self.min15).unwrap();
+        //println!("\nthis is json{:#?}\n", jdata);
+        jdata
+    }
+    fn to_30min_json(&mut self) -> String{
+        let jdata= serde_json::to_string(&self.min30).unwrap();
+        //println!("\nthis is json{:#?}\n", jdata);
+        jdata
+    }
+    fn to_60min_json(&mut self) -> String{
+        let jdata= serde_json::to_string(&self.min60).unwrap();
         //println!("\nthis is json{:#?}\n", jdata);
         jdata
     }
