@@ -149,10 +149,13 @@ pub struct QASeries{
 
 fn main() {
     // let code = "au2002".to_string();
-    let subscribe_list =  vec![ "au2006", "a2005", "ag2006", "al2002", "b2003",
-    "bb2002", "bu2006", "c2005", "cu2003", "cs2005","eg2005", "fb2005", "fu2005", "hc2005",
-    "j2005", "i2005", "jd2005", "jm2005", "l2005", "m2005", "ni2003", "p2005", "pb2002",
-    "pp2005", "rb2005", "ru2005", "sc2003", "sn2005", "sp2005", "v2005", "y2005"];
+    let subscribe_list =  vec!["IF2001", "IH2001", "IC2001", "TF2003", "T2003", "cu2003", "au2006", "ag2006",
+                               "zn2003", "al2002", "ru2005", "rb2005", "fu2005", "hc2005", "bu2006", "pb2002", "ni2003",
+                               "sn2006", "wr2005", "sc2003", "a2005", "b2003", "bb2002", "c2005", "cs2005", "fb2005",
+                               "i2005", "j2005", "jd2005", "jm2005", "l2005", "m2005", "p2005", "pp2005", "v2005",
+                               "y2005", "WH001", "PM007", "CF005", "CY005", "SR005", "TA005", "OI005", "RI005",
+                               "MA005", "FG005", "RS007", "RM005", "ZC005", "JR001", "LR007", "SF005", "SM005",
+                               "AP005", "TS2003", "sp2005", "eg2005", "CJ005", "nr2004", "rr2005", "UR005", "ss2006", "eb2005", "SA005"];
     let sub_iter= subscribe_list.iter().cloned();
     for code in sub_iter{
         thread::spawn(move|| {
