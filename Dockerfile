@@ -5,5 +5,8 @@ WORKDIR /usr/src/qamarket-rs
 
 COPY . .
 
-RUN cargo run --release
+RUN cargo build --release -j 20
+
+
+CMD [ "/usr/src/qamarket-rs/target/release/qamarket-rs" ]
 
