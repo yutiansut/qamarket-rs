@@ -1,23 +1,24 @@
-
-use amiquip::{Connection, ConsumerMessage, ConsumerOptions, ExchangeDeclareOptions, ExchangeType, FieldTable, QueueDeclareOptions, Result, Publish, Exchange};
-use amiquip::Delivery;
-use std::thread;
 extern crate crossbeam_utils;
-
-use crossbeam_channel::bounded;
-use crossbeam_channel::{Sender, Receiver};
-use serde_json::value::Value;
 extern crate ndarray;
-use ndarray::{array};
-mod dataframe;
-use crate::dataframe::DataCell;
-use serde_json::json;
+
+use std::thread;
+
+use amiquip::{Connection, ConsumerMessage, ConsumerOptions, Exchange, ExchangeDeclareOptions, ExchangeType, FieldTable, Publish, QueueDeclareOptions, Result};
+use amiquip::Delivery;
+use crossbeam_channel::{Receiver, Sender};
+use crossbeam_channel::bounded;
+use ndarray::array;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
+use serde_json::value::Value;
+
+use crate::dataframe::DataCell;
 
 
+mod dataframe;
 
-pub struct QAEventMQ{
-    pub amqp : String,
+pub struct QAEventMQ {
+    pub amqp: String,
     pub exchange: String,
     pub model: String,
     pub routing_key: String,
@@ -149,71 +150,72 @@ pub struct QASeries{
 
 fn main() {
     // let code = "au2002".to_string();
-    let subscribe_list =  vec!["IF2004",
-    "IH2004",
-    "IC2004",
-    "TF2006",
-    "T2006",
-    "cu2005",
-    "au2006",
-    "ag2006",
-    "zn2005",
-    "al2005",
-    "ru2005",
-    "rb2005",
-    "fu2005",
-    "hc2005",
-    "bu2006",
-    "pb2005",
-    "ni2006",
-    "sn2006",
-    "wr2005",
-    "sc2005",
-    "a2005",
-    "b2005",
-    "bb2004",
-    "c2009",
-    "cs2005",
-    "fb2005",
-    "i2005",
-    "j2005",
-    "jd2005",
-    "jm2005",
-    "l2005",
-    "m2009",
-    "p2005",
-    "pp2005",
-    "v2005",
-    "y2005",
-    "WH005",
-    "PM007",
-    "CF005",
-    "CY005",
-    "SR005",
-    "TA005",
-    "OI005",
-    "RI005",
-    "MA005",
-    "FG005",
-    "RS007",
-    "RM005",
-    "ZC005",
-    "JR007",
-    "LR007",
-    "SF005",
-    "SM005",
-    "AP005",
-    "TS2006",
-    "sp2005",
-    "eg2005",
-    "CJ005",
-    "nr2005",
-    "rr2005",
-    "UR005",
-    "ss2006",
-    "eb2005",
-    "SA005"];
-    let sub_iter= subscribe_list.iter().cloned();
+    let subscribe_list = vec!["IF2004",
+                              "IH2004",
+                              "IC2004",
+                              "TF2006",
+                              "T2006",
+                              "cu2005",
+                              "au2006",
+                              "ag2006",
+                              "zn2005",
+                              "al2006",
+                              "ru2009",
+                              "rb2010",
+                              "fu2005",
+                              "hc2010",
+                              "bu2006",
+                              "pb2005",
+                              "ni2006",
+                              "sn2006",
+                              "wr2005",
+                              "sc2006",
+                              "a2005",
+                              "b2005",
+                              "bb2004",
+                              "c2009",
+                              "cs2005",
+                              "fb2005",
+                              "i2009",
+                              "j2009",
+                              "jd2005",
+                              "jm2005",
+                              "l2009",
+                              "m2009",
+                              "p2005",
+                              "pp2005",
+                              "v2009",
+                              "y2009",
+                              "WH005",
+                              "PM007",
+                              "CF009",
+                              "CY005",
+                              "SR009",
+                              "TA009",
+                              "OI005",
+                              "RI005",
+                              "MA005",
+                              "FG009",
+                              "RS007",
+                              "RM009",
+                              "ZC009",
+                              "JR007",
+                              "LR007",
+                              "SF005",
+                              "SM005",
+                              "AP005",
+                              "TS2006",
+                              "sp2005",
+                              "eg2005",
+                              "CJ005",
+                              "nr2005",
+                              "rr2009",
+                              "UR005",
+                              "ss2006",
+                              "eb2005",
+                              "SA005",
+                              "pg2011"];
+    let sub_iter = subscribe_list.iter().cloned();
     for code in sub_iter{
         thread::spawn(move|| {
             subscribe_code(code.parse().unwrap());
