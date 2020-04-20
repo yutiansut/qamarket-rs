@@ -133,8 +133,7 @@ pub struct QAKlineBase{
     pub low: f64,
     pub close: f64,
     pub volume: f64,
-
-
+    pub frequence: String
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -272,7 +271,7 @@ fn subscribe_code(code:String){
 }
 
 impl QAKlineBase{
-    fn init() -> QAKlineBase {
+    fn init(frequence:String) -> QAKlineBase {
         QAKlineBase{
             datetime: "".to_string(),
             updatetime: "".to_string(),
@@ -282,6 +281,7 @@ impl QAKlineBase{
             low: 0.0,
             close: 0.0,
             volume: 0.0,
+            frequence
         }
     }
 
@@ -330,6 +330,7 @@ impl QAKlineBase{
             low: data["last_price"].as_f64().unwrap(),
             close: data["last_price"].as_f64().unwrap(),
             volume:data["volume"].as_f64().unwrap(),
+            frequence: self.frequence.clone()
         };
         data
     }
@@ -426,7 +427,7 @@ impl QASeries{
         if cur_datetime.len() == 19 {
             println!("create new bar !!");
             //self.min1.pop().unwrap();
-            let lastdata = QAKlineBase::init().new(data.clone());
+            let lastdata = QAKlineBase::init("1min".to_string()).new(data.clone());
             self.min1.push(lastdata);
         }else{
             let mut lastdata:QAKlineBase = self.min1.pop().unwrap();
@@ -441,7 +442,7 @@ impl QASeries{
         if cur_datetime.len() == 19 {
             println!("create new bar !!");
             //self.min5.pop().unwrap();
-            let lastdata = QAKlineBase::init().new(data.clone());
+            let lastdata = QAKlineBase::init("5min".to_string()).new(data.clone());
             self.min5.push(lastdata);
         }else{
             let mut lastdata:QAKlineBase = self.min5.pop().unwrap();
@@ -454,7 +455,7 @@ impl QASeries{
         if cur_datetime.len() == 19 {
             println!("create new bar !!");
             //self.min15.pop().unwrap();
-            let lastdata = QAKlineBase::init().new(data.clone());
+            let lastdata = QAKlineBase::init("15min".to_string()).new(data.clone());
             self.min15.push(lastdata);
         }else{
             let mut lastdata:QAKlineBase = self.min15.pop().unwrap();
@@ -467,7 +468,7 @@ impl QASeries{
         if cur_datetime.len() == 19 {
             println!("create new bar !!");
             //self.min30.pop().unwrap();
-            let lastdata = QAKlineBase::init().new(data.clone());
+            let lastdata = QAKlineBase::init("30min".to_string()).new(data.clone());
             self.min30.push(lastdata);
         }else{
             let mut lastdata:QAKlineBase = self.min30.pop().unwrap();
@@ -480,7 +481,7 @@ impl QASeries{
         if cur_datetime.len() == 19 {
             println!("create new bar !!");
             //self.min60.pop().unwrap();
-            let lastdata = QAKlineBase::init().new(data.clone());
+            let lastdata = QAKlineBase::init("60min".to_string()).new(data.clone());
             self.min60.push(lastdata);
         }else{
             let mut lastdata:QAKlineBase = self.min60.pop().unwrap();
