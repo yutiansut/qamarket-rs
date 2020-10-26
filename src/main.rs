@@ -16,8 +16,10 @@ use serde_json::json;
 use serde_json::value::Value;
 
 use crate::dataframe::DataCell;
+use crate::config::CONFIG;
 
 mod dataframe;
+mod config;
 
 pub struct QAEventMQ {
     pub amqp: String,
@@ -146,15 +148,16 @@ pub struct QASeries {
 
 fn main() {
     // let code = "au2002".to_string();
-    let subscribe_list = vec![
-        "IF2005", "IH2005", "IC2005", "TF2006", "T2006", "cu2006", "au2006", "ag2006", "zn2007",
-        "al2007", "ru2009", "rb2010", "fu2009", "hc2010", "bu2006", "pb2006", "ni2007", "sn2007",
-        "wr2010", "sc2006", "a2009", "b2006", "bb2006", "c2009", "cs2009", "fb2009", "i2009",
-        "j2009", "jd2006", "jm2009", "l2009", "m2009", "p2009", "pp2009", "v2009", "y2009",
-        "WH009", "PM007", "CF009", "CY009", "SR009", "TA009", "OI009", "RI009", "MA009", "FG009",
-        "RS009", "RM009", "ZC009", "JR007", "LR007", "SF009", "SM009", "AP010", "TS2006", "sp2009",
-        "eg2009", "CJ009", "nr2007", "rr2009", "UR009", "ss2007", "eb2009", "SA009", "pg2011",
-    ];
+    // let subscribe_list = vec![
+    //     "IF2005", "IH2005", "IC2005", "TF2006", "T2006", "cu2006", "au2006", "ag2006", "zn2007",
+    //     "al2007", "ru2009", "rb2010", "fu2009", "hc2010", "bu2006", "pb2006", "ni2007", "sn2007",
+    //     "wr2010", "sc2006", "a2009", "b2006", "bb2006", "c2009", "cs2009", "fb2009", "i2009",
+    //     "j2009", "jd2006", "jm2009", "l2009", "m2009", "p2009", "pp2009", "v2009", "y2009",
+    //     "WH009", "PM007", "CF009", "CY009", "SR009", "TA009", "OI009", "RI009", "MA009", "FG009",
+    //     "RS009", "RM009", "ZC009", "JR007", "LR007", "SF009", "SM009", "AP010", "TS2006", "sp2009",
+    //     "eg2009", "CJ009", "nr2007", "rr2009", "UR009", "ss2007", "eb2009", "SA009", "pg2011",
+    // ];
+    let subscribe_list:Vec<String> = CONFIG.common.subscribe_list.clone();
     let sub_iter = subscribe_list.iter().cloned();
     for code in sub_iter {
         thread::spawn(move || {
