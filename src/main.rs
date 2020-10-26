@@ -148,6 +148,7 @@ pub struct QASeries {
 
 fn main() {
     // let code = "au2002".to_string();
+
     // let subscribe_list = vec![
     //     "IF2005", "IH2005", "IC2005", "TF2006", "T2006", "cu2006", "au2006", "ag2006", "zn2007",
     //     "al2007", "ru2009", "rb2010", "fu2009", "hc2010", "bu2006", "pb2006", "ni2007", "sn2007",
@@ -158,6 +159,7 @@ fn main() {
     //     "eg2009", "CJ009", "nr2007", "rr2009", "UR009", "ss2007", "eb2009", "SA009", "pg2011",
     // ];
     let subscribe_list:Vec<String> = CONFIG.common.subscribe_list.clone();
+
     let sub_iter = subscribe_list.iter().cloned();
     for code in sub_iter {
         thread::spawn(move || {
