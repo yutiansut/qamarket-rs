@@ -26,3 +26,6 @@ crossbeam = "0.7"
 crossbeam-channel = "0.4"
 crossbeam-utils = "0.7"
 uuid = { version = "0.8", features = ["serde", "v4"] }
+lazy_static = "1.4.0"
+clap = "2.33"
+toml = "0.5"
